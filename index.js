@@ -129,7 +129,7 @@ client.on(Events.MessageCreate, async message => {
     let msg = message.content.toLowerCase();
 
     let date_timeStamp2 = getTimestamp();
-    console.log(`${date_timeStamp2}`);
+    console.log(`${date_timeStamp2} : ${message.content}`);
     if (msg === "ping") {
         console.log("pinged by" + Message.author);
         Message.reply("pong");
