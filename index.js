@@ -124,11 +124,18 @@ for (const folder of commandFolders) {
 }
 
 
-client.once(Events.ClientReady, () => {
-    Tags.sync();
-    console.log('Ready!');
-    console.log(`logged in as ${client.user.tag}`);
-    console.log(`current client ID : ${client.user.id}`);
+client.once(Events.ClientReady, async () => {
+    try{
+        await sequelize.authenticate();
+        console.log('Connection has been established successfully.');
+
+        Tags.sync();
+        console.log('Ready!');
+        console.log(`logged in as ${client.user.tag}`);
+        console.log(`current client ID : ${client.user.id}`);
+    } catch (error) {
+        console.error('Unable to connect to the database:', error);
+}
 });
 
 client.on(Events.InteractionCreate, async interaction => {
