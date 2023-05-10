@@ -121,15 +121,43 @@ client.once(Events.ClientReady, async () => {
 client.on(Events.MessageCreate, async message => {
 	if (message.author.bot) return;
     if (!message.guild) return;
-	
     addBalance(message.author.id, 1);
     let msg = message.content.toLowerCase();
     let date_timeStamp2 = getTimestamp();
 
-    if (msg === "ping") {
-        console.log(`${date_timeStamp2} : pinged by ${message.author.tag}`);
-        message.reply("pong");
+    switch (message.channel.id) {
+        case "776388929452245012":
+            admission(message, user);
+            break;
+
+        default:
     }
+
+    switch (msg) {
+        case `${prefix}ping`:
+            react(message);
+            break;
+
+        case `${prefix}react`:
+            react(message);
+            break;
+
+		case `${prefix}guildID`:
+			console.log(guild.id);
+			break;
+
+        case `${prefix}commandes`:
+            showCommands(message);
+            break;
+
+        case `${prefix}DMtest`:
+            dmTest(message);
+
+        default:
+            break;
+    }
+
+    
     if (msg === 'balance') {
 		message.reply(`${message.author.tag} has ${getBalance(message.author.id)}💰`);
     }
@@ -202,5 +230,257 @@ client.on(Events.InteractionCreate, async interaction => {
 		);
 	}
 });
+
+
+
+
+/* -------------------------------------------------------------------------- */
+/*                                  functions                                 */
+/* -------------------------------------------------------------------------- */
+
+async function ping(message) {
+    console.log(`${date_timeStamp2} : pinged by ${message.author.tag}`);
+    message.reply("pong");
+}
+
+async function sleep(ms) {
+    try {
+        return new Promise((resolve) => {
+            setTimeout(resolve, ms);
+        });
+    }
+    catch{
+
+    }
+}
+
+async function revive() {
+    try {
+        let pass = 1;
+        let result = '';
+        let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let charactersLength = 5;
+        for (let i = 0; i < 5; i++) {
+            result += characters.charAt(Math.floor(Math.random() * 5));
+        }
+        pass = result;
+        console.log(`password is : ${pass}`);
+        sleep(24000);
+        return new Promise((resolve) => {
+            setTimeout(resolve, 24000);
+        });
+    }
+    catch{
+
+    }
+}
+
+async function react(message) {
+    try {
+        await message.react('🇦');
+        await message.react('🇧');
+        await message.react('🇨');
+    } catch (error) {
+        // handle failure of any Promise rejection inside here
+    }
+}
+
+async function fetchMessages(message) {
+    try {
+        const fetchUser = message.mentions.members.first();
+        if (fetchUser) {
+            console.log("user fetched");
+            const fetchMember = message.guild.members.resolve(fetchUser);
+            if (fetchMember) {
+                console.log("member fetched");
+                console.log(fetchMember);
+                console.log(fetchMember.id);
+                channel.messages.fetch(limit = 800)
+                    .then(messages => console.log(`${messages.filter(message => message.author.id === fetchMember.id).size} messages`))
+                    .catch(console.error);
+            }
+        }
+    }
+    catch (error) {
+        // handle failure of any Promise rejection inside here
+    }
+}
+
+async function admission(message, user) {
+    let msg = message.content.toLowerCase();
+    console.log(message);
+    try {
+        if (msg === "lu et approuvé") {
+            try {
+                const member = message.author.fetch(user);
+                console.log(member);
+                //const role = message.guild.roles.cache.find(role => role.name === 'bottest');
+                let role = message.guild.roles.cache.find(r => r.id === '879110508932894780');
+                console.log(role);
+                console.log(role.id);
+                console.log(`Hi, ${user}.`);
+                const guildMember = message.mentions.members.first();
+                message.member.roles.add(role);
+                message.channel.lastMessage.delete();
+            } catch{
+                //error handling
+            }
+        }
+        else {
+            message.channel.lastMessage.delete();
+        }
+    } catch{
+        //error handling
+    }
+}
+
+async function say(message) {
+    if (message.author.id === "373205084072574977") {
+        let sentence = message.content.split(" ");
+        sentence.shift();
+        sentence = sentence.join(" ");
+        message.channel.lastMessage.delete();
+        message.channel.send(sentence);
+    } else {
+        message.channel.lastMessage.delete();
+    }
+}
+
+
+async function kick(message) {
+    /* This takes the sentence sent, and makes it an array. In this case, a list of words. It 'splits' the list up wherever it sees space.*/
+    let sentence = message.content.split(" ");
+
+    /* .shift(), alters the list. It removes the first thing in the list. This would be the "!say" word. If we assigned shift() to a variable. Like "let x = message.shift()" ... "x" would be the word that was removed. This is handy for grabbing command words. If you used shift() again, it would remove the second, then the third, each time that you type it.*/
+    sentence.shift();
+    sentence.shift();
+
+    // Now join the list back together into a sentence with "join()" and set that as the new sentence.
+    sentence = sentence.join(" ");
+
+    // Assuming we mention someone in the message, this will return the user
+    const user = message.mentions.users.first();
+
+    //if an user is mentionned
+    if (user) {
+
+        //get member from user
+        const member = message.guild.members.resolve(user);
+
+        //if the memberr is in the guild
+        if (member) {
+            member
+                .kick(`${sentence}`)
+                .then(() => {
+                    // We let the message author know we were able to kick the person
+                    message.channel.send(`j'ai bien renvoyé ${user.tag} pour ${sentence}`);
+                    message.channel.send("https://media1.tenor.com/images/1e46ced92e2521749ca6f72602765c1a/tenor.gif?itemid=18219363");
+                })
+                .catch(err => {
+                    // An error happened
+                    // This is generally due to the bot not being able to kick the member,
+                    // either due to missing permissions or role hierarchy
+                    message.reply('je ne peut pas le renvoyer');
+                    // Log the error
+                    console.error(err);
+                });
+        } else {
+            // The mentioned user isn't in this guild
+            message.reply("il n'es pas sur ce serveur");
+        }
+        // Otherwise, if no user was mentioned
+    } else {
+        message.reply("qui ?");
+    }
+}
+
+async function ban(message) {
+    /* This takes the sentence sent, and makes it an array. In this case, a list of words. It 'splits' the list up wherever it sees space.*/
+    let sentence = message.content.split(" ");
+
+    /* .shift(), alters the list. It removes the first thing in the list. This would be the "!say" word. If we assigned shift() to a variable. Like "let x = message.shift()" ... "x" would be the word that was removed. This is handy for grabbing command words. If you used shift() again, it would remove the second, then the third, each time that you type it.*/
+    sentence.shift();
+    sentence.shift();
+
+    // Now join the list back together into a sentence with "join()" and set that as the new sentence.
+    sentence = sentence.join(" ");
+
+    // Assuming we mention someone in the message, this will return the user
+    let user = message.mentions.users.first();
+
+    //if an user is mentionned
+    if (user) {
+
+        //get member from user
+        let member = message.guild.members.resolve(user);
+
+        //if the memberr is in the guild
+        if (member) {
+            member
+                .ban({
+                    reason: `${sentence}`
+                })
+                .then(() => {
+                    // We let the message author know we were able to ban the person
+                    message.channel.send(`j'ai bien renvoyé ${user.tag} pour ${sentence}`);
+                    message.channel.send("https://media1.tenor.com/images/1e46ced92e2521749ca6f72602765c1a/tenor.gif?itemid=18219363");
+                })
+                .catch(err => {
+                    // An error happened
+                    // This is generally due to the bot not being able to ban the member,
+                    // either due to missing permissions or role hierarchy
+                    message.reply('je ne peut pas le renvoyer');
+                    // Log the error
+                    console.error(err);
+                });
+        } else {
+            // The mentioned user isn't in this guild
+            message.reply("il n'es pas sur ce serveur");
+        }
+        // Otherwise, if no user was mentioned
+    } else {
+        message.reply("qui ?");
+    }
+}
+
+async function showCommands(message) {
+    message.channel.send({
+        "embed": {
+            "title": "Fangie",
+            "description": "je suis ici pour l'administration du serveur\n\nje peut comprendre toutes les commandes, qu'elles commencent par une majuscule ou non ^-^",
+            "color": 8742353,
+            "footer": {
+                "icon_url": "https://cdn.discordapp.com/app-icons/756204208587276299/a049e7c53a4401180224c5d57861545f.png",
+                "text": ".fangieCommands"
+            },
+            "thumbnail": {
+                "url": "https://cdn.discordapp.com/app-icons/756204208587276299/a049e7c53a4401180224c5d57861545f.png"
+            },
+            "fields": [
+                {
+                    "name": "jouer un morceau :",
+                    "value": "je peut rejouer n'importe quel musique youtube, demandez le simplement ^-^ ```?play [lien de la video]```"
+                },
+                {
+                    "name": "appel :",
+                    "value": "pour que je vous aide, il faut m'appeler avant : ```fangie \nfangie ?```\ntoutes les commandes suivantes ne pourront être écoutées que si je vous écoute."
+                },
+                {
+                    "name": "annuler :",
+                    "value": "si tu n'as rien a demander ```nan rien```"
+                },
+                {
+                    "name": "réciter une règle :",
+                    "value": "pour que je récite une règle, n'importe laquelle, tant que tu me donne le numéro de celle que tu veux ^^```règle ... stp```"
+                },
+                {
+                    "name": "un oubli ?",
+                    "value": "tu peux toujours me demander ce que je peut faire ```commandes \ncommandes?```"
+                }
+            ]
+        }
+    });
+}
+
 
 client.login(token);
