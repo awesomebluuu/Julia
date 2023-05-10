@@ -128,15 +128,18 @@ client.on(Events.MessageCreate, async message => {
 
     let msg = message.content.toLowerCase();
 
-    console.log("message");
+    let date_timeStamp2 = getTimestamp();
+    console.log(`${date_timeStamp2}`);
     if (msg === "ping") {
         console.log("pinged by" + Message.author);
         Message.reply("pong");
     }
+    /**
     if (msg === "!timeStamp") {
-        let date_timeStamp2 = getTimestamp();
-        console.log(date_timeStamp2);
+    *   let date_timeStamp2 = getTimestamp();
+    *   console.log(date_timeStamp2);
     }
+    */
     if (msg === 'balance') {
 		message.reply(`${message.author.tag} has ${getBalance(message.author.id)}💰`);
     }
