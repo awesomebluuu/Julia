@@ -12,12 +12,15 @@
 
 /* ------------------------------ database ORM ------------------------------ */
 const Sequelize = require('sequelize');
+const { Op } = require('sequelize');
+const { Users, CurrencyShop } = require('./dbObjects.js');
 
 /* ------------------------------- filesystem ------------------------------- */
 const fs = require('node:fs');
 
 /* ---------------------- nessessary discord.js classes --------------------- */
-const { Client, Collection, Events, GatewayIntentBits, Message, messageLink } = require('discord.js');
+const { Client, codeBlock, Collection, Events, GatewayIntentBits, Message, messageLink } = require('discord.js');
+
 /* ------------------------------- bot's token ------------------------------ */
 const { token } = require('./config.json');
 
@@ -27,54 +30,32 @@ const { timeStamp } = require('node:console');
 const app = express()
 
 /* ------------------------- creation of the client ------------------------- */
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
 
-
+const currency = new Collection();
 
 /* -------------------------------------------------------------------------- */
 /*                           data manipulation part                           */
 /* -------------------------------------------------------------------------- */
 
-/**
- * @brief connection information definition
- * 
- * @param {String} host - tells Sequelize where to look for the database. For most systems, the host will be localhost, as the database usually resides with the application. If you have a remote database, however, then you can set it to that connection address. Otherwise, don't touch this unless you know what you're doing.
- * @param {String} dialect - database engine used.
- * @param {Boolean} logging - enables verbose output from Sequelize–useful for when you are trying to debug. You can disable it by setting it to false.
- * @param {String} storage - sqlite-only setting
- */
-const sequelize = new Sequelize('database', 'user', 'password', {
-    host: 'localhost',
-    dialect: 'sqlite',
-    logging: false,
-    // SQLite only
-    storage: 'database.sqlite',
-});
+async function addBalance(id, amount) {
+	const user = currency.get(id);
 
+	if (user) {
+		user.balance += Number(amount);
+		return user.save();
+	}
 
-/**
- * @param {var} type - refers to what kind of data this attribute should hold. The most common types are number, string, and date, but other data types are available depending on the database.
- * @param {Boolean} unique - ensure that this field will never have duplicated entries.
- * @param {var} defaultValue - allows you to set a fallback value if there's no initial value during the insert.
- * @param {boolean} allowNull - will guarantee in the database that the attribute is never unset. You could potentially set it to be a blank or empty string, but it has to be something.
- * 
- */
-const Tags = sequelize.define('tags', { //CREATE TABLE tag
-	name: {                             //name VARCHAR(255) UNIQUE,
-		type: Sequelize.STRING,
-		unique: true,
-	},
-	description: Sequelize.TEXT,        //description TEXT,
-	username: Sequelize.STRING,         //username VARCHAR(255),
-	usage_count: {                      //usage_count  INT NOT NULL DEFAULT 0
-		type: Sequelize.INTEGER,
-		defaultValue: 0,
-		allowNull: false,
-	},
-});
+	const newUser = await Users.create({ user_id: id, balance: amount });
+	currency.set(id, newUser);
 
+	return newUser;
+}
 
-
+function getBalance(id) {
+	const user = currency.get(id);
+	return user ? user.balance : 0;
+}
 
 
 function getTimestamp() {
@@ -126,16 +107,35 @@ for (const folder of commandFolders) {
 
 client.once(Events.ClientReady, async () => {
     try{
-        await sequelize.authenticate();
-        console.log('Connection has been established successfully.');
+        const storedBalances = await Users.findAll();
+	    storedBalances.forEach(b => currency.set(b.user_id, b));
 
-        Tags.sync();
         console.log('Ready!');
         console.log(`logged in as ${client.user.tag}`);
         console.log(`current client ID : ${client.user.id}`);
     } catch (error) {
         console.error('Unable to connect to the database:', error);
 }
+});
+
+client.on(Events.MessageCreate, async message => {
+	if (message.author.bot) return;
+    if (!message.guild) return;
+	
+    addBalance(message.author.id, 1);
+
+
+    let msg = message.content.toLowerCase();
+
+    console.log("message");
+    if (Message.content == "ping") {
+        console.log("pinged by" + Message.author);
+        Message.reply("pong");
+    }
+    if (Message.content == "!timeStamp") {
+        let date_timeStamp2 = getTimestamp();
+        console.log(date_timeStamp2);
+    }
 });
 
 client.on(Events.InteractionCreate, async interaction => {
@@ -155,22 +155,59 @@ client.on(Events.InteractionCreate, async interaction => {
             await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
         }
     }
+
+    if (commandName === 'balance') {
+		const target = interaction.options.getUser('user') || interaction.user;
+
+		return interaction.reply(`${target.tag} has ${getBalance(target.id)}💰`);
+	} else if (commandName === 'inventory') {
+		const target = interaction.options.getUser('user') || interaction.user;
+		const user = await Users.findOne({ where: { user_id: target.id } });
+		const items = await user.getItems();
+
+		if (!items.length) return interaction.reply(`${target.tag} has nothing!`);
+
+		return interaction.reply(`${target.tag} currently has ${items.map(t => `${t.amount} ${t.item.name}`).join(', ')}`);
+	} else if (commandName === 'transfer') {
+		const currentAmount = getBalance(interaction.user.id);
+		const transferAmount = interaction.options.getInteger('amount');
+		const transferTarget = interaction.options.getUser('user');
+
+		if (transferAmount > currentAmount) return interaction.reply(`Sorry ${interaction.user} you don't have that much.`);
+		if (transferAmount <= 0) return interaction.reply(`Please enter an amount greater than zero, ${interaction.user}`);
+
+		addBalance(interaction.user.id, -transferAmount);
+		addBalance(transferTarget.id, transferAmount);
+
+		return interaction.reply(`Successfully transferred ${transferAmount}💰 to ${transferTarget.tag}. Your current balance is ${getBalance(interaction.user.id)}💰`);
+	} else if (commandName === 'buy') {
+		const itemName = interaction.options.getString('item');
+		const item = await CurrencyShop.findOne({ where: { name: { [Op.like]: itemName } } });
+
+		if (!item) return interaction.reply('That item doesn\'t exist.');
+		if (item.cost > getBalance(interaction.user.id)) {
+			return interaction.reply(`You don't have enough currency, ${interaction.user}`);
+		}
+
+		const user = await Users.findOne({ where: { user_id: interaction.user.id } });
+		addBalance(interaction.user.id, -item.cost);
+		await user.addItem(item);
+
+		return interaction.reply(`You've bought a ${item.name}`);
+	} else if (commandName === 'shop') {
+		const items = await CurrencyShop.findAll();
+		return interaction.reply(Formatters.codeBlock(items.map(i => `${i.name}: ${i.cost}💰`).join('\n')));
+	} else if (commandName === 'leaderboard') {
+		return interaction.reply(
+			Formatters.codeBlock(
+				currency.sort((a, b) => b.balance - a.balance)
+					.filter(user => client.users.cache.has(user.user_id))
+					.first(10)
+					.map((user, position) => `(${position + 1}) ${(client.users.cache.get(user.user_id).tag)}: ${user.balance}💰`)
+					.join('\n'),
+			),
+		);
+	}
 });
-
-client.on('message', async (message, user) => {
-    if (message.author.bot) return;
-    if (!message.guild) return;
-    let msg = message.content.toLowerCase();
-
-    console.log("message");
-    if (Message.content == "ping") {
-        console.log("pinged by" + Message.author);
-        Message.reply("pong");
-    }
-    if (Message.content == "!timeStamp") {
-        let date_timeStamp2 = getTimestamp();
-        console.log(date_timeStamp2);
-    }
-})
 
 client.login(token);
