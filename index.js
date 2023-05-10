@@ -123,23 +123,13 @@ client.on(Events.MessageCreate, async message => {
     if (!message.guild) return;
 	
     addBalance(message.author.id, 1);
-    message.reply(`${message.author.tag} has ${getBalance(message.author.id)}💰`);
-
-
     let msg = message.content.toLowerCase();
-
     let date_timeStamp2 = getTimestamp();
-    console.log(`${date_timeStamp2} : ${msg}`);
+
     if (msg === "ping") {
-        console.log("pinged by" + message.author.tag);
-        Message.reply("pong");
+        console.log(`${date_timeStamp2} : pinged by ${message.author.tag}`);
+        message.reply("pong");
     }
-    /**
-    if (msg === "!timeStamp") {
-    *   let date_timeStamp2 = getTimestamp();
-    *   console.log(date_timeStamp2);
-    }
-    */
     if (msg === 'balance') {
 		message.reply(`${message.author.tag} has ${getBalance(message.author.id)}💰`);
     }
