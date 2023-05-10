@@ -33,6 +33,7 @@ const app = express()
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
 
 const currency = new Collection();
+const prefix = '!';
 
 /* -------------------------------------------------------------------------- */
 /*                           data manipulation part                           */
