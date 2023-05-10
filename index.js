@@ -128,13 +128,16 @@ client.on(Events.MessageCreate, async message => {
     let msg = message.content.toLowerCase();
 
     console.log("message");
-    if (Message.content == "ping") {
+    if (msg == "ping") {
         console.log("pinged by" + Message.author);
         Message.reply("pong");
     }
-    if (Message.content == "!timeStamp") {
+    if (msg == "!timeStamp") {
         let date_timeStamp2 = getTimestamp();
         console.log(date_timeStamp2);
+    }
+    if (msg === 'balance') {
+		message.reply(`${message.author.tag} has ${getBalance(message.author.id)}💰`);
     }
 });
 
@@ -156,11 +159,7 @@ client.on(Events.InteractionCreate, async interaction => {
         }
     }
 
-    if (commandName === 'balance') {
-		const target = interaction.options.getUser('user') || interaction.user;
-
-		return interaction.reply(`${target.tag} has ${getBalance(target.id)}💰`);
-	} else if (commandName === 'inventory') {
+    if (commandName === 'inventory') {
 		const target = interaction.options.getUser('user') || interaction.user;
 		const user = await Users.findOne({ where: { user_id: target.id } });
 		const items = await user.getItems();
