@@ -30,7 +30,7 @@ const { timeStamp } = require('node:console');
 const app = express()
 
 /* ------------------------- creation of the client ------------------------- */
-const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
 
 const currency = new Collection();
 
@@ -131,7 +131,7 @@ client.on(Events.MessageCreate, async message => {
     let date_timeStamp2 = getTimestamp();
     console.log(`${date_timeStamp2} : ${msg}`);
     if (msg === "ping") {
-        console.log("pinged by" + message.author.user);
+        console.log("pinged by" + message.author.tag);
         Message.reply("pong");
     }
     /**
