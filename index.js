@@ -123,6 +123,7 @@ client.on(Events.MessageCreate, async message => {
     if (!message.guild) return;
 	
     addBalance(message.author.id, 1);
+    message.reply(`${message.author.tag} has ${getBalance(message.author.id)}💰`);
 
 
     let msg = message.content.toLowerCase();
