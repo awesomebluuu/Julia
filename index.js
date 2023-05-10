@@ -151,6 +151,10 @@ client.on(Events.MessageCreate, async message => {
             showCommands(message);
             break;
 
+            case `${prefix}balance`:
+                balance(message);
+                break;
+
         case `${prefix}DMtest`:
             dmTest(message);
 
@@ -158,10 +162,23 @@ client.on(Events.MessageCreate, async message => {
             break;
     }
 
+    //say as fangie
+	if (message.content.startsWith(`${prefix}say`)) {
+		say(message);
+	}
+
+	if (message.content.startsWith(`${prefix}kick`)) {
+		kick(message);
+	}
+
+	if (message.content.startsWith(`${prefix}ban`)) {
+		ban(message);
+	}
+
+	if (message.content.startsWith(`${prefix}fetch`)) {
+		fetchMessages(message);
+	}
     
-    if (msg === 'balance') {
-		message.reply(`${message.author.tag} has ${getBalance(message.author.id)}💰`);
-    }
 });
 
 client.on(Events.InteractionCreate, async interaction => {
@@ -253,6 +270,10 @@ async function sleep(ms) {
     catch{
 
     }
+}
+
+async function balance(message) {
+    message.reply(`${message.author.tag} has ${getBalance(message.author.id)}💰`);
 }
 
 async function revive() {
