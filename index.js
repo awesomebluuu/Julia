@@ -83,7 +83,7 @@ client.on(Events.MessageCreate, async message => {
 
     switch (message.channel.id) {
         case "756497011078856784":
-            admission(message, user);
+            admission(message);
             break;
 
         default:
@@ -300,7 +300,7 @@ async function fetchMessages(message) {
 }
 
 
-async function admission(message, user) {
+async function admission(message) {
     let msg = message.content.toLowerCase();
     console.log(message);
     try {
