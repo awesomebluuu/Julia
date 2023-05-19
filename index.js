@@ -82,7 +82,7 @@ client.on(Events.MessageCreate, async message => {
     let date_timeStamp2 = getTimestamp();
 
     switch (message.channel.id) {
-        case "776388929452245012":
+        case "756497011078856784":
             admission(message, user);
             break;
 
@@ -309,7 +309,7 @@ async function admission(message, user) {
                 const member = message.author.fetch(user);
                 console.log(member);
                 //const role = message.guild.roles.cache.find(role => role.name === 'bottest');
-                let role = message.guild.roles.cache.find(r => r.id === '756497011078856784');
+                let role = message.guild.roles.cache.find(r => r.id === '756501400246026341');
                 console.log(role);
                 console.log(role.id);
                 console.log(`Hi, ${user}.`);
