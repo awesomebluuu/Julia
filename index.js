@@ -36,57 +36,8 @@ const currency = new Collection();
 const prefix = '!';
 
 /* -------------------------------------------------------------------------- */
-/*                           data manipulation part                           */
+/*                           slash commands creation                          */
 /* -------------------------------------------------------------------------- */
-
-async function addBalance(id, amount) {
-	const user = currency.get(id);
-
-	if (user) {
-		user.balance += Number(amount);
-		return user.save();
-	}
-
-	const newUser = await Users.create({ user_id: id, balance: amount });
-	currency.set(id, newUser);
-
-	return newUser;
-}
-
-function getBalance(id) {
-	const user = currency.get(id);
-	return user ? user.balance : 0;
-}
-
-
-function getTimestamp() {
-    let date_time = new Date();
-
-    // get current date
-    // adjust 0 before single digit date
-    let date = ("0" + date_time.getDate()).slice(-2);
-
-    // get current month
-    let month = ("0" + (date_time.getMonth() + 1)).slice(-2);
-
-    // get current year
-    let year = date_time.getFullYear();
-
-    // get current hours
-    let hours = date_time.getHours();
-
-    // get current minutes
-    let minutes = date_time.getMinutes();
-
-    // get current seconds
-    let seconds = date_time.getSeconds();
-
-    // make timestamp
-    let date_timeStamp = (year + "-" + month + "-" + date + " " + hours + ":" + minutes + ":" + seconds);
-    return date_timeStamp;
-}
-
-
 client.commands = new Collection();
 const foldersPath = path.join(__dirname, 'commands');
 const commandFolders = fs.readdirSync(foldersPath);
@@ -105,6 +56,10 @@ for (const folder of commandFolders) {
     }
 }
 
+
+/* -------------------------------------------------------------------------- */
+/*                               event handling                               */
+/* -------------------------------------------------------------------------- */
 
 client.once(Events.ClientReady, async () => {
     try{
@@ -256,11 +211,62 @@ client.on(Events.InteractionCreate, async interaction => {
 /*                                  functions                                 */
 /* -------------------------------------------------------------------------- */
 
-async function ping(message) {
-    console.log(`${date_timeStamp2} : pinged by ${message.author.tag}`);
-    message.reply("pong");
+/* ----------------------------- basic functions ---------------------------- */
+
+/**
+ * @brief to check up if fangie is awake and running
+ * 
+ * @param {promise} message - the message sent as well as all it's components
+ */
+async function react(message) {
+    try {
+        await message.react('🇦');
+        await message.react('🇧');
+        await message.react('🇨');
+    } catch (error) {
+        // handle failure of any Promise rejection inside here
+    }
 }
 
+
+/**
+ * @brief returns the timestamp of when the function was called in the format YYYY-MM-DD-hh-mm-ss
+ * 
+ * @returns {string} date_timeStamp 
+ */
+function getTimestamp() {
+    let date_time = new Date();
+
+    // get current date
+    // adjust 0 before single digit date
+    let date = ("0" + date_time.getDate()).slice(-2);
+
+    // get current month
+    let month = ("0" + (date_time.getMonth() + 1)).slice(-2);
+
+    // get current year
+    let year = date_time.getFullYear();
+
+    // get current hours
+    let hours = date_time.getHours();
+
+    // get current minutes
+    let minutes = date_time.getMinutes();
+
+    // get current seconds
+    let seconds = date_time.getSeconds();
+
+    // make timestamp
+    let date_timeStamp = (year + "-" + month + "-" + date + " " + hours + ":" + minutes + ":" + seconds);
+    return date_timeStamp;
+}
+
+/**
+ * @brief stops the function that called sleep() for a defined time
+ * 
+ * @param {int} ms 
+ * @returns {void}
+ */
 async function sleep(ms) {
     try {
         return new Promise((resolve) => {
@@ -269,41 +275,6 @@ async function sleep(ms) {
     }
     catch{
 
-    }
-}
-
-async function balance(message) {
-    message.reply(`${message.author.tag} has ${getBalance(message.author.id)}💰`);
-}
-
-async function revive() {
-    try {
-        let pass = 1;
-        let result = '';
-        let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        let charactersLength = 5;
-        for (let i = 0; i < 5; i++) {
-            result += characters.charAt(Math.floor(Math.random() * 5));
-        }
-        pass = result;
-        console.log(`password is : ${pass}`);
-        sleep(24000);
-        return new Promise((resolve) => {
-            setTimeout(resolve, 24000);
-        });
-    }
-    catch{
-
-    }
-}
-
-async function react(message) {
-    try {
-        await message.react('🇦');
-        await message.react('🇧');
-        await message.react('🇨');
-    } catch (error) {
-        // handle failure of any Promise rejection inside here
     }
 }
 
@@ -328,6 +299,7 @@ async function fetchMessages(message) {
     }
 }
 
+
 async function admission(message, user) {
     let msg = message.content.toLowerCase();
     console.log(message);
@@ -337,7 +309,7 @@ async function admission(message, user) {
                 const member = message.author.fetch(user);
                 console.log(member);
                 //const role = message.guild.roles.cache.find(role => role.name === 'bottest');
-                let role = message.guild.roles.cache.find(r => r.id === '879110508932894780');
+                let role = message.guild.roles.cache.find(r => r.id === '756497011078856784');
                 console.log(role);
                 console.log(role.id);
                 console.log(`Hi, ${user}.`);
@@ -504,5 +476,29 @@ async function showCommands(message) {
     });
 }
 
+/* ---------------------------- data manipulation --------------------------- */
+
+async function addBalance(id, amount) {
+	const user = currency.get(id);
+
+	if (user) {
+		user.balance += Number(amount);
+		return user.save();
+	}
+
+	const newUser = await Users.create({ user_id: id, balance: amount });
+	currency.set(id, newUser);
+
+	return newUser;
+}
+
+function getBalance(id) {
+	const user = currency.get(id);
+	return user ? user.balance : 0;
+}
+
+async function balance(message) {
+    message.reply(`${message.author.tag} has ${getBalance(message.author.id)}💰`);
+}
 
 client.login(token);
